@@ -396,8 +396,8 @@ const ball = {
     if (this.willScore) {
       this.tx = hoopX; this.ty = hoopY;
     } else {
-      // Always misses — random offset around rim
-      const angle = (Math.random() - 0.5) * 1.8;
+      // Always misses — random offset around rim (full circle so ball scatters in all directions)
+      const angle = Math.random() * Math.PI * 2;
       const dist = 18 + Math.random() * 28;
       this.tx = hoopX + Math.cos(angle) * dist;
       this.ty = hoopY + Math.sin(angle) * dist;
@@ -671,11 +671,14 @@ function doSteal() {
     const d2 = (cp.x - target.x) ** 2 + (cp.y - target.y) ** 2;
     if (d2 < 60 * 60) {
       if (Math.random() < 0.28) {
-        // Success
+        // Success — give ball directly to stealer and stun the target
         target.hasBall = false;
-        ball.carrier = null;
-        ball.vx = cp.facing * 3;
-        ball.vy = (Math.random() - 0.5) * 2;
+        target.stunTimer = 60;
+        cp.hasBall = true;
+        ball.carrier = cp.id;
+        ball.x = cp.x + cp.facing * 10;
+        ball.y = cp.y - 2;
+        ball.vx = 0; ball.vy = 0;
         shotClock = SHOTCLOCK_FRAMES;
       } else {
         cp.fall('trip');
