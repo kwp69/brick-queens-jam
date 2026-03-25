@@ -2,18 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.json">
   <title>Brick Queens Jam</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
+    html, body {
       background: #111;
       overflow: hidden;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
+    }
+    body {
       display: flex;
       align-items: center;
       justify-content: center;
+      /* Use dynamic viewport height — excludes browser bars */
+      height: 100dvh;
+      /* Push content above home indicator / nav bar */
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-top: env(safe-area-inset-top);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     }
     canvas {
       display: block;
@@ -548,10 +561,10 @@ function handleScore(team) {
 const keys = { up: false, down: false, left: false, right: false };
 let shootPressed = false, stealPressed = false;
 
-// Touch button zones (in internal coords)
-const DPAD  = { x: 105, y: 390, r: 52 };
-const SBTN  = { x: 672, y: 385, r: 42 };  // SHOOT
-const STBTN = { x: 748, y: 358, r: 30 };  // STEAL
+// Touch button zones (in internal coords) — kept high enough to clear bottom gesture zone
+const DPAD  = { x: 105, y: 368, r: 52 };
+const SBTN  = { x: 672, y: 365, r: 42 };  // SHOOT
+const STBTN = { x: 748, y: 338, r: 30 };  // STEAL
 
 function ipt(cx, cy) { return { x: (cx - offX) / scale, y: (cy - offY) / scale }; }
 
@@ -604,7 +617,7 @@ window.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
   if (e.key === ' ')  { e.preventDefault(); if (gameState === 'playing') doShoot(); else handleMenuTap(); }
   if (e.key === 'x' || e.key === 'X') { if (gameState === 'playing') doSteal(); }
-  if (e.key === 'Enter') handleMenuTap();
+  if (e.key === 'Enter') { tryFullscreen(); handleMenuTap(); }
 });
 window.addEventListener('keyup', e => {
   if (e.key === 'ArrowUp'    || e.key === 'w') keys.up    = false;
@@ -1000,7 +1013,14 @@ function drawScreen(title, sub1, sub2, cta, scoreStr) {
   ctx.textBaseline = 'alphabetic';
 }
 
+function tryFullscreen() {
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' });
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+
 function handleMenuTap() {
+  tryFullscreen();
   if (gameState === 'menu' || gameState === 'gameover') {
     initGame();
     gameState = 'playing';
@@ -1028,6 +1048,22 @@ function loop(ts) {
       '▶  TAP TO PLAY  ◀',
       null
     );
+    // iOS tip: no fullscreen API, show "Add to Home Screen" hint
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone;
+    if (isIOS && !isStandalone) {
+      const s = scale;
+      ctx.globalAlpha = 0.75;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(offX, canvas.height - 38 * s, IW * s, 38 * s);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#4CC9F0';
+      ctx.font = `${10 * s}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('📲  For fullscreen: tap Share → Add to Home Screen', canvas.width / 2, canvas.height - 19 * s);
+      ctx.textBaseline = 'alphabetic';
+    }
     return;
   }
 
