@@ -390,8 +390,8 @@ const ball = {
     this.z = 0; this.vz = 0;
     this.spin = 0;
 
-    // 1-in-12 chance it actually goes in
-    this.willScore = forceScore || (Math.random() < 0.083);
+    // 1-in-4 chance it actually goes in
+    this.willScore = forceScore || (Math.random() < 0.25);
 
     if (this.willScore) {
       this.tx = hoopX; this.ty = hoopY;
@@ -670,7 +670,7 @@ function doSteal() {
   if (target) {
     const d2 = (cp.x - target.x) ** 2 + (cp.y - target.y) ** 2;
     if (d2 < 60 * 60) {
-      if (Math.random() < 0.28) {
+      if (Math.random() < 0.50) {
         // Success — give ball directly to stealer and stun the target
         target.hasBall = false;
         target.stunTimer = 60;
@@ -686,11 +686,11 @@ function doSteal() {
       }
     } else {
       // Too far — trip anyway because they're bad
-      if (Math.random() < 0.45) cp.fall('trip');
+      if (Math.random() < 0.20) cp.fall('trip');
       say('steal');
     }
   } else {
-    if (Math.random() < 0.35) cp.fall('trip');
+    if (Math.random() < 0.15) cp.fall('trip');
     say('steal');
   }
 }
@@ -1047,7 +1047,7 @@ function loop(ts) {
     drawScreen(
       '🧱 BRICK QUEENS JAM 🧱',
       'WNBA — WHERE EVERY SHOT IS A CERTIFIED BRICK',
-      'D-PAD: move  •  SHOOT: always misses  •  STEAL: trip yourself',
+      'D-PAD: move  •  SHOOT: sometimes works  •  STEAL: try your luck',
       '▶  TAP TO PLAY  ◀',
       null
     );
